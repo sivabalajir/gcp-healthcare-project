@@ -5,8 +5,13 @@ from airflow.utils.dates import days_ago
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 # Define constants
-PROJECT_ID = "avd-databricks-demo"
+PROJECT_ID = "long-nation-476207-n7"
 LOCATION = "US"
+
+# Your bucket updated (if needed later for gs:// paths)
+COMPOSER_BUCKET = "healthcare-bucket021125"
+
+# SQL file paths inside Cloud Composer environment
 SQL_FILE_PATH_1 = "/home/airflow/gcs/data/BQ/bronze.sql"
 SQL_FILE_PATH_2 = "/home/airflow/gcs/data/BQ/silver.sql"
 SQL_FILE_PATH_3 = "/home/airflow/gcs/data/BQ/gold.sql"
@@ -22,7 +27,7 @@ GOLD_QUERY = read_sql_file(SQL_FILE_PATH_3)
 
 # Define default arguments
 ARGS = {
-    "owner": "SHAIK SAIDHUL",
+    "owner": "Siva Balaji",
     "start_date": None,
     "depends_on_past": False,
     "email_on_failure": False,
@@ -37,12 +42,12 @@ ARGS = {
 with DAG(
     dag_id="bigquery_dag",
     schedule_interval=None,
-    description="DAG to run the bigquery jobs",
+    description="DAG to run the BigQuery jobs",
     default_args=ARGS,
     tags=["gcs", "bq", "etl", "marvel"]
 ) as dag:
 
-    # Task to create bronze table
+    # Task to create bronze tables
     bronze_tables = BigQueryInsertJobOperator(
         task_id="bronze_tables",
         configuration={
@@ -52,9 +57,11 @@ with DAG(
                 "priority": "BATCH",
             }
         },
+        project_id=PROJECT_ID,
+        location=LOCATION
     )
 
-    # Task to create silver table
+    # Task to create silver tables
     silver_tables = BigQueryInsertJobOperator(
         task_id="silver_tables",
         configuration={
@@ -64,9 +71,11 @@ with DAG(
                 "priority": "BATCH",
             }
         },
+        project_id=PROJECT_ID,
+        location=LOCATION
     )
 
-    # Task to create gold table
+    # Task to create gold tables
     gold_tables = BigQueryInsertJobOperator(
         task_id="gold_tables",
         configuration={
@@ -76,6 +85,8 @@ with DAG(
                 "priority": "BATCH",
             }
         },
+        project_id=PROJECT_ID,
+        location=LOCATION
     )
 
 # Define dependencies
